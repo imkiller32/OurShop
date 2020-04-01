@@ -116,19 +116,21 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        floatingActionButton: FloatingActionButton(
-            child: Icon(Icons.refresh),
-            onPressed: () {
-              setState(() {
-                schools = null;
-              });
-              fetchObj.getData().then((results) {
-                setState(() {
-                  schools = results;
-                  print("DoneRitesh");
-                });
-              });
-            }),
+        floatingActionButton: (schools != null)
+            ? FloatingActionButton(
+                child: Icon(Icons.refresh),
+                onPressed: () {
+                  setState(() {
+                    schools = null;
+                  });
+                  fetchObj.getData().then((results) {
+                    setState(() {
+                      schools = results;
+                      print("DoneRitesh");
+                    });
+                  });
+                })
+            : null,
         body: schoolList());
   }
 
@@ -143,9 +145,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.fromLTRB(10.0, 25.0, 10.0, 10.0),
                   child: Card(
                     clipBehavior: Clip.antiAlias,
-                    elevation: 6.0,
+                    elevation: 10.0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4.0),
+                      borderRadius: BorderRadius.circular(10.0),
                     ),
                     child: Column(
                       children: <Widget>[
@@ -155,7 +157,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text(
                           schools.documents[i].data['Name'],
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 20),
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.w700),
+                        ),
+                        Text(
+                          schools.documents[i].data['Location'],
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.w300),
                         ),
                         Padding(
                             padding:
@@ -176,8 +185,27 @@ class _HomeScreenState extends State<HomeScreen> {
                                   openUrl(schools.documents[i].data['BookList'],
                                       schools.documents[i].data['Name']);
                                 }),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.fromLTRB(5.0, 0, 5.0, 0),
+                            ),
+                            RaisedButton(
+                                color: Colors.blue,
+                                textColor: Colors.white,
+                                disabledColor: Colors.grey,
+                                disabledTextColor: Colors.black,
+                                padding: EdgeInsets.all(8.0),
+                                splashColor: Colors.blueAccent,
+                                child: Text("More Info"),
+                                onPressed: () {
+                                  openUrl(schools.documents[i].data['BookList'],
+                                      schools.documents[i].data['Name']);
+                                }),
                           ],
                         ),
+                        Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 5.0)),
                       ],
                     ),
                   )),
