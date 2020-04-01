@@ -1,4 +1,4 @@
-package com.example.sukhlal_ak
+package com.imkiller.sukhlal_ak
 
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterActivity
