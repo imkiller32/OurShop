@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "3046318999",
+    "firebase_url": "https://sukhlaladeshkumar-bs.firebaseio.com",
+    "project_id": "sukhlaladeshkumar-bs",
+    "storage_bucket": "sukhlaladeshkumar-bs.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:3046318999:android:299d2d34b62e4028239ad2",
+        "android_client_info": {
+          "package_name": "com.example.sukhlal_ak"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "3046318999-5gk8i4cqs2a8p5hud9pcaeindo733nou.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtTFZXujTF6ZgOSgogpSeMCJzTCP7rkns"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "3046318999-5gk8i4cqs2a8p5hud9pcaeindo733nou.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
