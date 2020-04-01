@@ -5,6 +5,7 @@ import 'package:SAK/ContactUs.dart';
 import 'package:SAK/Help.dart';
 import 'package:SAK/Setting.dart';
 import 'package:url_launcher/url_launcher.dart' as url_launcher;
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 Future<Null> openUrl(link, name) async {
   if (await url_launcher.canLaunch(link)) {
@@ -61,11 +62,11 @@ class _HomeScreenState extends State<HomeScreen> {
           title: Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
+              Icon(Icons.book),
+              Padding(padding: EdgeInsets.fromLTRB(0, 0, 10.0, 0)),
               Text(
                 "Sukhlal Adesh Kumar",
-                style: TextStyle(
-                  fontSize: 19.0,
-                ),
+                style: TextStyle(fontSize: 19.0),
               ),
             ],
           ),
@@ -115,156 +116,78 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        body: SingleChildScrollView(
-            child: Container(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(10.0, 25.0, 10.0, 10.0),
-            child: Column(
-              children: <Widget>[
-                Text(
-                  "Schools We Surve - ",
-                  style: TextStyle(fontSize: 20, color: Colors.blue),
-                ),
-                Divider(
-                  height: 15.0,
-                  thickness: 3.0,
-                  color: Colors.blue,
-                ),
-                Card(
-                  clipBehavior: Clip.antiAlias,
-                  elevation: 6.0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4.0),
-                  ),
-                  child: Column(
-                    children: <Widget>[
-                      Padding(
-                          padding:
-                              const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 5.0)),
-                      Text(
-                        'Spring Dales Public School, Mawana (MEERUT)',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 20),
-                      ),
-                      Padding(
-                          padding:
-                              const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 5.0)),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          FlatButton(
-                            color: Colors.blue,
-                            textColor: Colors.white,
-                            disabledColor: Colors.grey,
-                            disabledTextColor: Colors.black,
-                            padding: EdgeInsets.all(8.0),
-                            splashColor: Colors.blueAccent,
-                            onPressed: () {
-                              openUrl(
-                                  'https://drive.google.com/open?id=1tAh577FUFmYiL07GURRxoeuvVgixSHyM',
-                                  "SDPS");
-                            },
-                            child: Text(
-                              "Book List",
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                Card(
-                  clipBehavior: Clip.antiAlias,
-                  elevation: 6.0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4.0),
-                  ),
-                  child: Column(
-                    children: <Widget>[
-                      Padding(
-                          padding:
-                              const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 5.0)),
-                      Text(
-                        'Uttam Public School, Rahawati (MEERUT)',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 20),
-                      ),
-                      Padding(
-                          padding:
-                              const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 5.0)),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          FlatButton(
-                            color: Colors.blue,
-                            textColor: Colors.white,
-                            disabledColor: Colors.grey,
-                            disabledTextColor: Colors.black,
-                            padding: EdgeInsets.all(8.0),
-                            splashColor: Colors.blueAccent,
-                            onPressed: () {
-                              openUrl(
-                                  'https://drive.google.com/open?id=18-ZroSY6tYypYeBb2sdQ9FSQIhYggE_N',
-                                  "UTTAM");
-                            },
-                            child: Text(
-                              "Book List",
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                Card(
-                  clipBehavior: Clip.antiAlias,
-                  elevation: 6.0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4.0),
-                  ),
-                  child: Column(
-                    children: <Widget>[
-                      Padding(
-                          padding:
-                              const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 5.0)),
-                      Text(
-                        'Indira Public School, Mawana (MEERUT)',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 20),
-                      ),
-                      Padding(
-                          padding:
-                              const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 5.0)),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          FlatButton(
-                            color: Colors.blue,
-                            textColor: Colors.white,
-                            disabledColor: Colors.grey,
-                            disabledTextColor: Colors.black,
-                            padding: EdgeInsets.all(8.0),
-                            splashColor: Colors.blueAccent,
-                            onPressed: () {
-                              openUrl(
-                                  'https://drive.google.com/open?id=1z298CHh_iiKikPfdEZ8I8TzQDtyXGsSq',
-                                  "Indira");
-                            },
-                            child: Text(
-                              "Book List",
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        )));
+        floatingActionButton: FloatingActionButton(
+            child: Icon(Icons.refresh),
+            onPressed: () {
+              setState(() {
+                schools = null;
+              });
+              fetchObj.getData().then((results) {
+                setState(() {
+                  schools = results;
+                  print("DoneRitesh");
+                });
+              });
+            }),
+        body: schoolList());
+  }
+
+  Widget schoolList() {
+    if (schools != null) {
+      return ListView.builder(
+          itemCount: schools.documents.length,
+          padding: EdgeInsets.all(5.0),
+          itemBuilder: (context, i) {
+            return Container(
+              child: Padding(
+                  padding: const EdgeInsets.fromLTRB(10.0, 25.0, 10.0, 10.0),
+                  child: Card(
+                    clipBehavior: Clip.antiAlias,
+                    elevation: 6.0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4.0),
+                    ),
+                    child: Column(
+                      children: <Widget>[
+                        Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 5.0)),
+                        Text(
+                          schools.documents[i].data['Name'],
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 20),
+                        ),
+                        Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 5.0)),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            RaisedButton(
+                                color: Colors.blue,
+                                textColor: Colors.white,
+                                disabledColor: Colors.grey,
+                                disabledTextColor: Colors.black,
+                                padding: EdgeInsets.all(8.0),
+                                splashColor: Colors.blueAccent,
+                                child: Text("Book List"),
+                                onPressed: () {
+                                  openUrl(schools.documents[i].data['BookList'],
+                                      schools.documents[i].data['Name']);
+                                }),
+                          ],
+                        ),
+                      ],
+                    ),
+                  )),
+            );
+          });
+    } else {
+      return SpinKitThreeBounce(
+        color: Colors.blue,
+        size: 25,
+      );
+    }
   }
 }
