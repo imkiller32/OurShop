@@ -8,4 +8,10 @@ class FetchMethods {
   getCoursesData() async {
     return await Firestore.instance.collection('courses').getDocuments();
   }
+
+  Future<void> addData(courseData) async {
+    Firestore.instance.collection('courses').add(courseData).catchError((e) {
+      print(e);
+    });
+  }
 }

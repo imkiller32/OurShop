@@ -1,10 +1,12 @@
 import 'package:SAK/readData.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 // import 'package:SAK/ContactUs.dart';
 // import 'package:SAK/Help.dart';
 // import 'package:SAK/Setting.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:url_launcher/url_launcher.dart' as url_launcher;
 //import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:backdrop/backdrop.dart';
@@ -17,6 +19,52 @@ Future<Null> openUrl(link, name) async {
   }
 }
 
+void showDes(msg) {
+  Fluttertoast.showToast(
+      msg: msg,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      timeInSecForIosWeb: 1,
+      backgroundColor: Colors.black,
+      textColor: Colors.white,
+      fontSize: 16.0);
+}
+
+String validateName(String value) {
+  if (value.isEmpty) return 'Name is required';
+  final RegExp nameExp = RegExp(r'^[A-Za-z]+$');
+  if (!nameExp.hasMatch(value)) return 'Enter Only Alphabetical characters';
+  return null;
+}
+
+Future<void> _neverSatisfied(context) async {
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: false, // user must tap button!
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('Request Result'),
+        content: SingleChildScrollView(
+          child: ListBody(
+            children: <Widget>[
+              Text('Your Request Successfully Submitted'),
+              Text('We will contact You soon.'),
+            ],
+          ),
+        ),
+        actions: <Widget>[
+          FlatButton(
+            child: Text('Home'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
 class HomeScreen extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -25,6 +73,57 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   QuerySnapshot schools, courses;
   FetchMethods fetchObj = FetchMethods();
+
+  String name;
+  String mobile;
+  String address;
+  int _radVal = 0;
+  String selectedClass;
+  String selectedLocation;
+  String paymentMode;
+
+  static const classesList = <String>[
+    'Nur',
+    'LKG',
+    'UKG',
+    '1st',
+    '2nd',
+    '3rd',
+    '4th',
+    '5th',
+    '6th',
+    '7th',
+    '8th',
+    '9th',
+    '10th',
+    '11th',
+    '12th'
+  ];
+
+  static const locationList = <String>['Mawana', 'Other'];
+
+  static const paymentList = <String>['Online', 'Other'];
+
+  final List<DropdownMenuItem<String>> _dropdownItems_class = classesList
+      .map((String value) => DropdownMenuItem<String>(
+            value: value,
+            child: Text(value),
+          ))
+      .toList();
+
+  final List<DropdownMenuItem<String>> _dropdownItems_location = locationList
+      .map((String value) => DropdownMenuItem<String>(
+            value: value,
+            child: Text(value),
+          ))
+      .toList();
+
+  final List<DropdownMenuItem<String>> _dropdownItems_payment = paymentList
+      .map((String value) => DropdownMenuItem<String>(
+            value: value,
+            child: Text(value),
+          ))
+      .toList();
 
   @override
   void initState() {
@@ -51,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return BackdropScaffold(
       title: Text('Sukhlal Adesh Kumar'),
       iconPosition: BackdropIconPosition.leading,
-      headerHeight: 400.0,
+      headerHeight: 200.0,
       actions: (_currentIndex == 0 || _currentIndex == 3)
           ? <Widget>[
               IconButton(
@@ -83,7 +182,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ? schoolList()
           : (_currentIndex == 1)
               ? contactUs()
-              : (_currentIndex == 2) ? aboutUs() : coursesList(),
+              : (_currentIndex == 2)
+                  ? aboutUs()
+                  : (_currentIndex == 3) ? coursesList() : requestCourse(),
       backLayer: BackdropNavigationBackLayer(
         items: [
           ListTile(
@@ -123,6 +224,16 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             leading: Icon(
               Icons.verified_user,
+              color: Colors.white,
+            ),
+          ),
+          ListTile(
+            title: Text(
+              "Request Course",
+              style: TextStyle(color: Colors.white),
+            ),
+            leading: Icon(
+              Icons.file_upload,
               color: Colors.white,
             ),
           ),
@@ -172,38 +283,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         Padding(
                             padding:
                                 const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 5.0)),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        ButtonBar(
+                          alignment: MainAxisAlignment.spaceAround,
                           children: <Widget>[
-                            RaisedButton(
-                                color: Colors.blue,
-                                textColor: Colors.white,
-                                disabledColor: Colors.grey,
-                                disabledTextColor: Colors.black,
-                                padding: EdgeInsets.all(8.0),
-                                splashColor: Colors.blueAccent,
+                            OutlineButton(
                                 child: Text("Book List"),
                                 onPressed: () {
                                   openUrl(schools.documents[i].data['BookList'],
                                       schools.documents[i].data['Name']);
                                 }),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.fromLTRB(5.0, 0, 5.0, 0),
-                            ),
-                            RaisedButton(
-                                color: Colors.blue,
-                                textColor: Colors.white,
-                                disabledColor: Colors.grey,
-                                disabledTextColor: Colors.black,
-                                padding: EdgeInsets.all(8.0),
-                                splashColor: Colors.blueAccent,
-                                child: Text("More Info"),
-                                onPressed: () {
-                                  openUrl(schools.documents[i].data['BookList'],
-                                      schools.documents[i].data['Name']);
-                                }),
+                            OutlineButton(
+                                child: Text("More Info"), onPressed: null),
                           ],
                         ),
                         Padding(
@@ -232,14 +322,11 @@ class _HomeScreenState extends State<HomeScreen> {
           itemCount: courses.documents.length,
           padding: EdgeInsets.all(5.0),
           itemBuilder: (context, i) {
-            if (i == 5) {
-              print(courses.documents[i]);
-            }
             return Container(
               child: Padding(
                   padding: const EdgeInsets.fromLTRB(10.0, 25.0, 10.0, 10.0),
                   child: Card(
-                    clipBehavior: Clip.antiAlias,
+                    clipBehavior: Clip.antiAliasWithSaveLayer,
                     elevation: 10.0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.0),
@@ -279,7 +366,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             padding:
                                 const EdgeInsets.fromLTRB(0.0, 5.0, 0.0, 5.0)),
                         Text(
-                          courses.documents[i].data['Address'],
+                          (courses.documents[i].data['Address'] == "")
+                              ? courses.documents[i].data['Address']
+                              : "NONE",
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               fontSize: 18, fontWeight: FontWeight.w300),
@@ -288,12 +377,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             padding:
                                 const EdgeInsets.fromLTRB(0.0, 5.0, 0.0, 5.0)),
                         Text(
-                          (courses.documents[i].data['PayOnline'])
+                          (courses.documents[i].data['PayOnline'] == "Online")
                               ? "Payonline - Yes"
                               : "Payonline - No",
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                              color: (courses.documents[i].data['PayOnline'])
+                              color: (courses.documents[i].data['PayOnline'] ==
+                                      "Online")
                                   ? Colors.green
                                   : Colors.red,
                               fontSize: 18,
@@ -324,4 +414,160 @@ class _HomeScreenState extends State<HomeScreen> {
 
 //End Admin Pannel
 
+//Form
+  Widget requestCourse() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          SizedBox(
+            height: 24.0,
+          ),
+          TextFormField(
+            textCapitalization: TextCapitalization.words,
+            decoration: InputDecoration(
+                border: UnderlineInputBorder(),
+                filled: true,
+                icon: Icon(Icons.person),
+                hintText: 'What do people call you?',
+                labelText: 'Name *'),
+            onChanged: (String value) {
+              setState(() {
+                this.name = value;
+              });
+            },
+            validator: validateName,
+          ),
+          SizedBox(
+            height: 24.0,
+          ),
+          TextFormField(
+            decoration: const InputDecoration(
+              border: UnderlineInputBorder(),
+              filled: true,
+              icon: Icon(Icons.phone),
+              hintText: ' Where can we reach you?',
+              labelText: 'Phone *',
+              prefixText: '+91',
+            ),
+            keyboardType: TextInputType.phone,
+            onChanged: (String value) {
+              setState(() {
+                this.mobile = value;
+              });
+            },
+            inputFormatters: <TextInputFormatter>[
+              WhitelistingTextInputFormatter.digitsOnly
+            ],
+          ),
+          SizedBox(
+            height: 24.0,
+          ),
+          ButtonBar(
+            alignment: MainAxisAlignment.spaceEvenly,
+            children: [0, 1, 2]
+                .map((int index) => Radio<int>(
+                    value: index,
+                    groupValue: this._radVal,
+                    onChanged: (int value) {
+                      setState(() {
+                        this._radVal = value;
+                      });
+                    }))
+                .toList(),
+          ),
+          ButtonBar(
+            alignment: MainAxisAlignment.spaceEvenly,
+            children: <Widget>[
+              Text("S.D.P.S"),
+              Text("U.P.S"),
+              Text("I.P.S"),
+            ],
+          ),
+          SizedBox(
+            height: 24.0,
+          ),
+          ListTile(
+            title: Text("Select Class:"),
+            trailing: DropdownButton(
+                value: this.selectedClass,
+                hint: Text('Choose'),
+                items: this._dropdownItems_class,
+                onChanged: (String value) {
+                  setState(() {
+                    this.selectedClass = value;
+                  });
+                }),
+          ),
+          ListTile(
+            title: Text("Select Location:"),
+            trailing: DropdownButton(
+                value: this.selectedLocation,
+                hint: Text('Choose'),
+                items: this._dropdownItems_location,
+                onChanged: (String value) {
+                  setState(() {
+                    this.selectedLocation = value;
+                  });
+                }),
+          ),
+          ListTile(
+            title: Text("Select Payment Mode:"),
+            trailing: DropdownButton(
+                value: this.paymentMode,
+                hint: Text('Choose'),
+                items: this._dropdownItems_payment,
+                onChanged: (String value) {
+                  setState(() {
+                    this.paymentMode = value;
+                  });
+                }),
+          ),
+          SizedBox(
+            height: 24.0,
+          ),
+          TextFormField(
+            decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'Enter Your Address',
+                labelText: 'Enter Your Address'),
+            maxLines: 2,
+            onChanged: (String value) {
+              setState(() {
+                this.address = value;
+              });
+            },
+          ),
+          ButtonBar(alignment: MainAxisAlignment.center, children: <Widget>[
+            OutlineButton(
+              onPressed: () {
+                Map<String, dynamic> requestCourseData = {
+                  'Date': DateTime.now().toString(),
+                  'Name': this.name,
+                  'Class': this.selectedClass,
+                  'Mobile': this.mobile,
+                  'Location': this.selectedLocation,
+                  'Address': this.address,
+                  'PayOnline': this.paymentMode
+                };
+                fetchObj.addData(requestCourseData).then((result) {
+                  _neverSatisfied(context);
+                }).catchError((e) {
+                  showDes(e);
+                });
+                showDes("Successfully Submitted");
+                setState(() {
+                  _currentIndex = 0;
+                });
+              },
+              child: Text("Submit"),
+            ),
+          ]),
+        ],
+      ),
+    );
+  }
+//End Form
 }
