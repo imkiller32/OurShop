@@ -14,4 +14,8 @@ class FetchMethods {
       print(e);
     });
   }
+
+  getHomeworkData(databaseReference) async {
+    return await databaseReference.once();
+  }
 }

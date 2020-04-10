@@ -12,6 +12,7 @@ import 'package:url_launcher/url_launcher.dart' as url_launcher;
 import 'package:backdrop/backdrop.dart';
 import 'package:SAK/widgets/contact_us.dart';
 import 'package:SAK/widgets/about_us.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 Future<Null> openUrl(link, name) async {
   if (await url_launcher.canLaunch(link)) {
@@ -72,6 +73,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   QuerySnapshot schools, courses;
+  DataSnapshot homework;
   FetchMethods fetchObj = FetchMethods();
 
   String name;
@@ -79,8 +81,12 @@ class _HomeScreenState extends State<HomeScreen> {
   String address;
   int _radVal = 0;
   String selectedClass;
+  String selectedClass_for_homework;
+  String selectedSubjects;
   String selectedLocation;
   String paymentMode;
+
+  final databaseReference = FirebaseDatabase.instance.reference();
 
   static const classesList = <String>[
     'Nur',
@@ -104,6 +110,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   static const paymentList = <String>['Online', 'Other'];
 
+  static const subjectList = <String>[
+    'SST',
+    'Science',
+    'Hindi',
+    'English',
+    'Maths'
+  ];
+
   final List<DropdownMenuItem<String>> _dropdownItems_class = classesList
       .map((String value) => DropdownMenuItem<String>(
             value: value,
@@ -125,6 +139,13 @@ class _HomeScreenState extends State<HomeScreen> {
           ))
       .toList();
 
+  final List<DropdownMenuItem<String>> _dropdownItems_subjects = subjectList
+      .map((String value) => DropdownMenuItem<String>(
+            value: value,
+            child: Text(value),
+          ))
+      .toList();
+
   @override
   void initState() {
     super.initState();
@@ -140,10 +161,79 @@ class _HomeScreenState extends State<HomeScreen> {
         print("DoneCourses");
       });
     });
+    fetchObj.getHomeworkData(databaseReference).then((results) {
+      setState(() {
+        homework = results;
+        print('DoneHomeWork');
+      });
+    });
   }
 
   int _currentIndex = 0;
   //List<Widget> _frontLayers = [hello(), ContactUs(), Help()];
+
+  void settingModalBottomSheet(context) {
+    showModalBottomSheet(
+        context: context,
+        builder: (BuildContext bc) {
+          return Container(
+            child: Wrap(
+              children: <Widget>[
+                ListTile(
+                  title: Text("Select Class:"),
+                  trailing: DropdownButton(
+                      value: this.selectedClass_for_homework,
+                      hint: Text('Choose'),
+                      items: this._dropdownItems_class,
+                      onChanged: (String value) {
+                        setState(() {
+                          this.selectedClass_for_homework = value;
+                        });
+                      }),
+                ),
+                ListTile(
+                  title: Text("Select Subject:"),
+                  trailing: DropdownButton(
+                      value: this.selectedSubjects,
+                      hint: Text('Choose'),
+                      items: this._dropdownItems_subjects,
+                      onChanged: (String value) {
+                        setState(() {
+                          this.selectedSubjects = value;
+                        });
+                      }),
+                ),
+                Center(
+                  child: RaisedButton(
+                    onPressed: () {
+                      fetchObj
+                          .getHomeworkData(databaseReference)
+                          .then((results) {
+                        setState(() {
+                          homework = results;
+                          _currentIndex = 3;
+                          print('DoneHomeWorkFilter');
+                        });
+                        if (Navigator.canPop(context)) Navigator.pop(context);
+                      });
+                    },
+                    color: Colors.white,
+                    child: Text("Apply"),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15.0),
+                        side: BorderSide(color: Colors.blue)),
+                  ),
+                ),
+                Padding(padding: const EdgeInsets.fromLTRB(0, 5, 0, 15)),
+              ],
+            ),
+          );
+        });
+  }
+
+  void createBottomSheet() async {
+    settingModalBottomSheet(context);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -154,13 +244,18 @@ class _HomeScreenState extends State<HomeScreen> {
       actions: (_currentIndex == 0 || _currentIndex == 3)
           ? <Widget>[
               IconButton(
-                  icon: Icon(
-                    Icons.refresh,
-                    color: Colors.white,
-                  ),
+                  icon: (_currentIndex == 0)
+                      ? Icon(
+                          Icons.refresh,
+                          color: Colors.white,
+                        )
+                      : Icon(
+                          Icons.filter_list,
+                          color: Colors.white,
+                        ),
                   onPressed: () {
                     setState(() {
-                      (_currentIndex == 0) ? schools = null : courses = null;
+                      (_currentIndex == 0) ? schools = null : homework = null;
                     });
                     (_currentIndex == 0)
                         ? fetchObj.getSchoolData().then((results) {
@@ -169,12 +264,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               print("DoneSchools");
                             });
                           })
-                        : fetchObj.getCoursesData().then((results) {
-                            setState(() {
-                              courses = results;
-                              print("DoneCourses2");
-                            });
-                          });
+                        : createBottomSheet();
                   })
             ]
           : null,
@@ -184,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ? contactUs()
               : (_currentIndex == 2)
                   ? aboutUs()
-                  : (_currentIndex == 3) ? coursesList() : requestCourse(),
+                  : (_currentIndex == 3) ? homeWork() : requestCourse(),
       backLayer: BackdropNavigationBackLayer(
         items: [
           ListTile(
@@ -217,13 +307,23 @@ class _HomeScreenState extends State<HomeScreen> {
               color: Colors.white,
             ),
           ),
+          // ListTile(
+          //   title: Text(
+          //     "Admin Pannel",
+          //     style: TextStyle(color: Colors.white),
+          //   ),
+          //   leading: Icon(
+          //     Icons.verified_user,
+          //     color: Colors.white,
+          //   ),
+          // ),
           ListTile(
             title: Text(
-              "Admin Pannel",
+              "Homework Section",
               style: TextStyle(color: Colors.white),
             ),
             leading: Icon(
-              Icons.verified_user,
+              Icons.message,
               color: Colors.white,
             ),
           ),
@@ -313,6 +413,152 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
 //End School Widget
+
+//Homework Section
+
+  Widget homeWork() {
+    if (homework != null) {
+      return ListView.builder(
+          itemCount: homework.value['homework'].length,
+          padding: EdgeInsets.all(5.0),
+          itemBuilder: (context, i) {
+            return Container(
+              child: Padding(
+                  padding: const EdgeInsets.fromLTRB(10.0, 25.0, 10.0, 10.0),
+                  child: Card(
+                    color: (homework.value['homework'][i]['Subject'] ==
+                                selectedSubjects &&
+                            homework.value['homework'][i]['Class'] ==
+                                selectedClass_for_homework)
+                        ? Colors.lime[50]
+                        : Colors.white,
+                    clipBehavior: Clip.antiAliasWithSaveLayer,
+                    elevation: 10.0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    child: Column(
+                      children: <Widget>[
+                        Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 5.0)),
+                        Text(
+                          "Date - " +
+                              homework.value['homework'][i]['Timestamp']
+                                  .toString(),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.w300),
+                        ),
+                        Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(0.0, 5.0, 0.0, 5.0)),
+                        Text(
+                          "Name - " +
+                              homework.value['homework'][i]['Name'].toString(),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: Colors.blue,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900),
+                        ),
+                        Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(0.0, 5.0, 0.0, 5.0)),
+                        Text(
+                          "Class - " +
+                              homework.value['homework'][i]['Class'].toString(),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.w500),
+                        ),
+                        Text(
+                          "Section - " +
+                              homework.value['homework'][i]['Section']
+                                  .toString(),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.w300),
+                        ),
+                        Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(0.0, 5.0, 0.0, 5.0)),
+                        Text(
+                          "Father's Name - " +
+                              homework.value['homework'][i]['FatherName']
+                                  .toString(),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.w300),
+                        ),
+                        Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(0.0, 5.0, 0.0, 5.0)),
+                        Text(
+                          "Subject - " +
+                              homework.value['homework'][i]['Subject']
+                                  .toString(),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.w600),
+                        ),
+                        Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 5.0)),
+                        Container(
+                          width: 150,
+                          padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+                          height: 50 *
+                              homework.value['homework'][i]
+                                      ['UploadYourHomework']
+                                  .toString()
+                                  .split(',')
+                                  .length
+                                  .toDouble(),
+                          child: ListView.builder(
+                            //shrinkWrap: true,
+                            itemCount: homework.value['homework'][i]
+                                    ['UploadYourHomework']
+                                .toString()
+                                .split(',')
+                                .length,
+                            itemBuilder: (context, j) {
+                              return RaisedButton(
+                                onPressed: () {
+                                  openUrl(
+                                      homework.value['homework'][i]
+                                              ['UploadYourHomework']
+                                          .toString()
+                                          .split(', ')[j],
+                                      homework.value['homework'][i]['Name']
+                                          .toString());
+                                },
+                                color: Colors.white,
+                                child: Text("Open Image " + (j + 1).toString()),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(15.0),
+                                    side: BorderSide(color: Colors.blue)),
+                              );
+                            },
+                          ),
+                        ),
+                        Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 5.0)),
+                      ],
+                    ),
+                  )),
+            );
+          });
+    } else {
+      return SpinKitThreeBounce(
+        color: Colors.blue,
+        size: 25,
+      );
+    }
+  }
+
+//End of Homework Section
 
 //Admin Pannel
 
