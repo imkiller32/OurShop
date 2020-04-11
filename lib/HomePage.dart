@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:SAK/readData.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -81,14 +83,16 @@ class _HomeScreenState extends State<HomeScreen> {
   String address;
   int _radVal = 0;
   String selectedClass;
-  String selectedClass_for_homework;
-  String selectedSubjects;
+  String selectedClass_for_homework = 'All';
+  String selectSection = 'All';
+  String selectedSubjects = 'All';
   String selectedLocation;
   String paymentMode;
 
   final databaseReference = FirebaseDatabase.instance.reference();
 
   static const classesList = <String>[
+    'All',
     'Nur',
     'LKG',
     'UKG',
@@ -103,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
     '9th',
     '10th',
     '11th',
-    '12th'
+    '12th',
   ];
 
   static const locationList = <String>['Mawana', 'Other'];
@@ -111,12 +115,18 @@ class _HomeScreenState extends State<HomeScreen> {
   static const paymentList = <String>['Online', 'Other'];
 
   static const subjectList = <String>[
+    'All',
     'SST',
     'Science',
     'Hindi',
     'English',
-    'Maths'
+    'Maths',
+    'E.V.S',
+    'Life Skill',
+    'G.K',
   ];
+
+  static const sectionList = <String>['All', 'A', 'B'];
 
   final List<DropdownMenuItem<String>> _dropdownItems_class = classesList
       .map((String value) => DropdownMenuItem<String>(
@@ -140,6 +150,13 @@ class _HomeScreenState extends State<HomeScreen> {
       .toList();
 
   final List<DropdownMenuItem<String>> _dropdownItems_subjects = subjectList
+      .map((String value) => DropdownMenuItem<String>(
+            value: value,
+            child: Text(value),
+          ))
+      .toList();
+
+  final List<DropdownMenuItem<String>> _dropdownItems_sections = sectionList
       .map((String value) => DropdownMenuItem<String>(
             value: value,
             child: Text(value),
@@ -170,70 +187,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   int _currentIndex = 0;
-  //List<Widget> _frontLayers = [hello(), ContactUs(), Help()];
-
-  void settingModalBottomSheet(context) {
-    showModalBottomSheet(
-        context: context,
-        builder: (BuildContext bc) {
-          return Container(
-            child: Wrap(
-              children: <Widget>[
-                ListTile(
-                  title: Text("Select Class:"),
-                  trailing: DropdownButton(
-                      value: this.selectedClass_for_homework,
-                      hint: Text('Choose'),
-                      items: this._dropdownItems_class,
-                      onChanged: (String value) {
-                        setState(() {
-                          this.selectedClass_for_homework = value;
-                        });
-                      }),
-                ),
-                ListTile(
-                  title: Text("Select Subject:"),
-                  trailing: DropdownButton(
-                      value: this.selectedSubjects,
-                      hint: Text('Choose'),
-                      items: this._dropdownItems_subjects,
-                      onChanged: (String value) {
-                        setState(() {
-                          this.selectedSubjects = value;
-                        });
-                      }),
-                ),
-                Center(
-                  child: RaisedButton(
-                    onPressed: () {
-                      fetchObj
-                          .getHomeworkData(databaseReference)
-                          .then((results) {
-                        setState(() {
-                          homework = results;
-                          _currentIndex = 3;
-                          print('DoneHomeWorkFilter');
-                        });
-                        if (Navigator.canPop(context)) Navigator.pop(context);
-                      });
-                    },
-                    color: Colors.white,
-                    child: Text("Apply"),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15.0),
-                        side: BorderSide(color: Colors.blue)),
-                  ),
-                ),
-                Padding(padding: const EdgeInsets.fromLTRB(0, 5, 0, 15)),
-              ],
-            ),
-          );
-        });
-  }
-
-  void createBottomSheet() async {
-    settingModalBottomSheet(context);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -264,7 +217,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               print("DoneSchools");
                             });
                           })
-                        : createBottomSheet();
+                        : setState(() {
+                            _currentIndex = 5;
+                          });
                   })
             ]
           : null,
@@ -274,7 +229,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ? contactUs()
               : (_currentIndex == 2)
                   ? aboutUs()
-                  : (_currentIndex == 3) ? homeWork() : requestCourse(),
+                  : (_currentIndex == 3)
+                      ? homeWork()
+                      : (_currentIndex == 4) ? requestCourse() : filterWork(),
       backLayer: BackdropNavigationBackLayer(
         items: [
           ListTile(
@@ -417,21 +374,53 @@ class _HomeScreenState extends State<HomeScreen> {
 //Homework Section
 
   Widget homeWork() {
+    int len = 0;
+    List<Map<String, String>> filteredData = [];
     if (homework != null) {
+      for (var value in homework.value['homework']) {
+        if (selectedSubjects != "All" && value['Subject'] != selectedSubjects) {
+          continue;
+        } else if (selectedClass_for_homework != "All" &&
+            value['Class'] != selectedClass_for_homework) {
+          continue;
+        } else if (selectSection != "All" &&
+            value['Section'] != selectSection) {
+          continue;
+        } else {
+          len = len + 1;
+          Map<String, String> temp = {
+            'Class': value['Class'],
+            'Subject': value['Subject'],
+            'Section': value['Section'],
+            'Name': value['Name'],
+            'FatherName': value['FatherName'],
+            'UploadYourHomework': value['UploadYourHomework'],
+            'Timestamp': value['Timestamp']
+          };
+          filteredData.add(temp);
+        }
+      }
+      showDes(len.toString() + " Entries Found");
+    }
+
+    if (homework != null && len == 0) {
+      return Center(
+        child: Text("No Enteries Found"),
+      );
+    } else if (homework == null) {
+      return SpinKitThreeBounce(
+        color: Colors.blue,
+        size: 25,
+      );
+    } else {
       return ListView.builder(
-          itemCount: homework.value['homework'].length,
+          itemCount: len,
           padding: EdgeInsets.all(5.0),
           itemBuilder: (context, i) {
             return Container(
               child: Padding(
                   padding: const EdgeInsets.fromLTRB(10.0, 25.0, 10.0, 10.0),
                   child: Card(
-                    color: (homework.value['homework'][i]['Subject'] ==
-                                selectedSubjects &&
-                            homework.value['homework'][i]['Class'] ==
-                                selectedClass_for_homework)
-                        ? Colors.lime[50]
-                        : Colors.white,
                     clipBehavior: Clip.antiAliasWithSaveLayer,
                     elevation: 10.0,
                     shape: RoundedRectangleBorder(
@@ -443,9 +432,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             padding:
                                 const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 5.0)),
                         Text(
-                          "Date - " +
-                              homework.value['homework'][i]['Timestamp']
-                                  .toString(),
+                          "Date - " + filteredData[i]['Timestamp'].toString(),
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               fontSize: 18, fontWeight: FontWeight.w300),
@@ -454,8 +441,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             padding:
                                 const EdgeInsets.fromLTRB(0.0, 5.0, 0.0, 5.0)),
                         Text(
-                          "Name - " +
-                              homework.value['homework'][i]['Name'].toString(),
+                          "Name - " + filteredData[i]['Name'].toString(),
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               color: Colors.blue,
@@ -466,16 +452,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             padding:
                                 const EdgeInsets.fromLTRB(0.0, 5.0, 0.0, 5.0)),
                         Text(
-                          "Class - " +
-                              homework.value['homework'][i]['Class'].toString(),
+                          "Class - " + filteredData[i]['Class'].toString(),
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               fontSize: 18, fontWeight: FontWeight.w500),
                         ),
                         Text(
-                          "Section - " +
-                              homework.value['homework'][i]['Section']
-                                  .toString(),
+                          "Section - " + filteredData[i]['Section'].toString(),
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               fontSize: 18, fontWeight: FontWeight.w300),
@@ -485,8 +468,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 const EdgeInsets.fromLTRB(0.0, 5.0, 0.0, 5.0)),
                         Text(
                           "Father's Name - " +
-                              homework.value['homework'][i]['FatherName']
-                                  .toString(),
+                              filteredData[i]['FatherName'].toString(),
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               fontSize: 18, fontWeight: FontWeight.w300),
@@ -495,9 +477,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             padding:
                                 const EdgeInsets.fromLTRB(0.0, 5.0, 0.0, 5.0)),
                         Text(
-                          "Subject - " +
-                              homework.value['homework'][i]['Subject']
-                                  .toString(),
+                          "Subject - " + filteredData[i]['Subject'].toString(),
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               fontSize: 18, fontWeight: FontWeight.w600),
@@ -509,16 +489,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           width: 150,
                           padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
                           height: 50 *
-                              homework.value['homework'][i]
-                                      ['UploadYourHomework']
+                              filteredData[i]['UploadYourHomework']
                                   .toString()
                                   .split(',')
                                   .length
                                   .toDouble(),
                           child: ListView.builder(
                             //shrinkWrap: true,
-                            itemCount: homework.value['homework'][i]
-                                    ['UploadYourHomework']
+                            itemCount: filteredData[i]['UploadYourHomework']
                                 .toString()
                                 .split(',')
                                 .length,
@@ -526,12 +504,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               return RaisedButton(
                                 onPressed: () {
                                   openUrl(
-                                      homework.value['homework'][i]
-                                              ['UploadYourHomework']
+                                      filteredData[i]['UploadYourHomework']
                                           .toString()
                                           .split(', ')[j],
-                                      homework.value['homework'][i]['Name']
-                                          .toString());
+                                      filteredData[i]['Name'].toString());
                                 },
                                 color: Colors.white,
                                 child: Text("Open Image " + (j + 1).toString()),
@@ -550,11 +526,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   )),
             );
           });
-    } else {
-      return SpinKitThreeBounce(
-        color: Colors.blue,
-        size: 25,
-      );
     }
   }
 
@@ -657,8 +628,86 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
   }
-
 //End Admin Pannel
+
+// Filter Form
+
+  Widget filterWork() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(0, 15, 0, 10),
+            ),
+            Text(
+              'Filter',
+              style: TextStyle(fontSize: 16.0, color: Colors.lightBlue),
+            ),
+            ListTile(
+              title: Text("Select Class:"),
+              trailing: DropdownButton(
+                  value: this.selectedClass_for_homework,
+                  hint: Text('Choose'),
+                  items: this._dropdownItems_class,
+                  onChanged: (String value) {
+                    setState(() {
+                      this.selectedClass_for_homework = value;
+                    });
+                  }),
+            ),
+            ListTile(
+              title: Text("Select Section:"),
+              trailing: DropdownButton(
+                  value: this.selectSection,
+                  hint: Text('Choose'),
+                  items: this._dropdownItems_sections,
+                  onChanged: (String value) {
+                    setState(() {
+                      this.selectSection = value;
+                    });
+                  }),
+            ),
+            ListTile(
+              title: Text("Select Subject:"),
+              trailing: DropdownButton(
+                  value: this.selectedSubjects,
+                  hint: Text('Choose'),
+                  items: this._dropdownItems_subjects,
+                  onChanged: (String value) {
+                    setState(() {
+                      this.selectedSubjects = value;
+                    });
+                  }),
+            ),
+            Center(
+              child: RaisedButton(
+                onPressed: () {
+                  setState(() {
+                    homework = null;
+                    _currentIndex = 3;
+                  });
+                  fetchObj.getHomeworkData(databaseReference).then((results) {
+                    setState(() {
+                      homework = results;
+                      print('DoneHomeWorkFilter');
+                    });
+                  });
+                },
+                color: Colors.white,
+                child: Text("Apply"),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15.0),
+                    side: BorderSide(color: Colors.blue)),
+              ),
+            ),
+          ]),
+    );
+  }
+
+//End Form
 
 //Form
   Widget requestCourse() {
