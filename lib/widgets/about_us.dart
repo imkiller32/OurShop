@@ -51,6 +51,17 @@ Widget aboutUs() {
                   }),
             ],
           ),
+          Padding(padding: const EdgeInsets.fromLTRB(0, 10.0, 0, 0)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Text(
+                'Developed By- Ritesh Aggarwal',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18,),
+              ),
+            ],
+          ),
         ],
       ),
     ),

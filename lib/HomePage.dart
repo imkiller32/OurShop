@@ -1,16 +1,10 @@
-import 'dart:collection';
-
 import 'package:SAK/readData.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-// import 'package:SAK/ContactUs.dart';
-// import 'package:SAK/Help.dart';
-// import 'package:SAK/Setting.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:url_launcher/url_launcher.dart' as url_launcher;
-//import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:backdrop/backdrop.dart';
 import 'package:SAK/widgets/contact_us.dart';
 import 'package:SAK/widgets/about_us.dart';
@@ -74,7 +68,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  QuerySnapshot schools, courses;
+  QuerySnapshot schools;
+  //QuerySnapshot courses;
   DataSnapshot homework;
   FetchMethods fetchObj = FetchMethods();
 
@@ -85,55 +80,21 @@ class _HomeScreenState extends State<HomeScreen> {
   String selectedClass;
   String selectedClass_for_homework = 'All';
   String selectSection = 'All';
+  String selectWing = 'All';
   String selectedSubjects = 'All';
   String selectedLocation;
   String paymentMode;
 
   final databaseReference = FirebaseDatabase.instance.reference();
 
-  static const classesList = <String>[
-    'All',
-    'Nur',
-    'LKG',
-    'UKG',
-    '1st',
-    '2nd',
-    '3rd',
-    '4th',
-    '5th',
-    '6th',
-    '7th',
-    '8th',
-    '9th',
-    '10th',
-    '11th',
-    '12th',
-  ];
-
   static const locationList = <String>['Mawana', 'Other'];
 
   static const paymentList = <String>['Online', 'Other'];
 
-  static const subjectList = <String>[
-    'All',
-    'SST',
-    'Science',
-    'Hindi',
-    'English',
-    'Maths',
-    'E.V.S',
-    'Life Skill',
-    'G.K',
-  ];
-
-  static const sectionList = <String>['All', 'A', 'B'];
-
-  final List<DropdownMenuItem<String>> _dropdownItems_class = classesList
-      .map((String value) => DropdownMenuItem<String>(
-            value: value,
-            child: Text(value),
-          ))
-      .toList();
+  var listOfSubject = <String>[];
+  var listOfSection = <String>[];
+  var listOfWing = <String>[];
+  var listOfClass = <String>[];
 
   final List<DropdownMenuItem<String>> _dropdownItems_location = locationList
       .map((String value) => DropdownMenuItem<String>(
@@ -149,20 +110,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ))
       .toList();
 
-  final List<DropdownMenuItem<String>> _dropdownItems_subjects = subjectList
-      .map((String value) => DropdownMenuItem<String>(
-            value: value,
-            child: Text(value),
-          ))
-      .toList();
-
-  final List<DropdownMenuItem<String>> _dropdownItems_sections = sectionList
-      .map((String value) => DropdownMenuItem<String>(
-            value: value,
-            child: Text(value),
-          ))
-      .toList();
-
+  List<DropdownMenuItem<String>> _dropdownItems_subjects = [];
+  List<DropdownMenuItem<String>> _dropdownItems_sections = [];
+  List<DropdownMenuItem<String>> _dropdownItems_wings = [];
+  List<DropdownMenuItem<String>> _dropdownItems_class = [];
   @override
   void initState() {
     super.initState();
@@ -172,16 +123,52 @@ class _HomeScreenState extends State<HomeScreen> {
         print("DoneSchools");
       });
     });
-    fetchObj.getCoursesData().then((results) {
-      setState(() {
-        courses = results;
-        print("DoneCourses");
-      });
-    });
+    // fetchObj.getCoursesData().then((results) {
+    //   setState(() {
+    //     courses = results;
+    //     print("DoneCourses");
+    //   });
+    // });
     fetchObj.getHomeworkData(databaseReference).then((results) {
       setState(() {
         homework = results;
-        print('DoneHomeWork');
+        for (var value in homework.value['subject']) {
+          listOfSubject.add(value['Subject'].toString());
+        }
+        for (var value in homework.value['section']) {
+          listOfSection.add(value['Section'].toString());
+        }
+        for (var value in homework.value['wing']) {
+          listOfWing.add(value['Wing'].toString());
+        }
+        for (var value in homework.value['class']) {
+          listOfClass.add(value['Class'].toString());
+        }
+        _dropdownItems_subjects.addAll(listOfSubject
+            .map((String value) => DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                ))
+            .toList());
+        _dropdownItems_sections.addAll(listOfSection
+            .map((String value) => DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                ))
+            .toList());
+        _dropdownItems_wings.addAll(listOfWing
+            .map((String value) => DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                ))
+            .toList());
+        _dropdownItems_class.addAll(listOfClass
+            .map((String value) => DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                ))
+            .toList());
+        print('Done HomeWork - subjects - sections - wings - classes');
       });
     });
   }
@@ -276,7 +263,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // ),
           ListTile(
             title: Text(
-              "Homework Section",
+              "Homework Section For S.D.P.S",
               style: TextStyle(color: Colors.white),
             ),
             leading: Icon(
@@ -386,6 +373,8 @@ class _HomeScreenState extends State<HomeScreen> {
         } else if (selectSection != "All" &&
             value['Section'] != selectSection) {
           continue;
+        } else if (selectWing != "All" && value['Wing'] != selectWing) {
+          continue;
         } else {
           len = len + 1;
           Map<String, String> temp = {
@@ -395,7 +384,8 @@ class _HomeScreenState extends State<HomeScreen> {
             'Name': value['Name'],
             'FatherName': value['FatherName'],
             'UploadYourHomework': value['UploadYourHomework'],
-            'Timestamp': value['Timestamp']
+            'Timestamp': value['Timestamp'],
+            'Wing': value['Wing']
           };
           filteredData.add(temp);
         }
@@ -405,7 +395,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (homework != null && len == 0) {
       return Center(
-        child: Text("No Enteries Found"),
+        child: Text("No Entries Found"),
       );
     } else if (homework == null) {
       return SpinKitThreeBounce(
@@ -432,10 +422,43 @@ class _HomeScreenState extends State<HomeScreen> {
                             padding:
                                 const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 5.0)),
                         Text(
-                          "Date - " + filteredData[i]['Timestamp'].toString(),
+                          "Wing - " +
+                              filteredData[i]['Wing'].split('[')[0].toString(),
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.w300),
+                            fontSize: 18,
+                            backgroundColor: Colors.yellow,
+                          ),
+                        ),
+                        ButtonBar(
+                          alignment: MainAxisAlignment.spaceEvenly,
+                          children: <Widget>[
+                            Text(
+                              "Date - " +
+                                  filteredData[i]['Timestamp']
+                                      .split(' ')[0]
+                                      .split('/')[1]
+                                      .toString() +
+                                  "-" +
+                                  filteredData[i]['Timestamp']
+                                      .split(' ')[0]
+                                      .split('/')[0]
+                                      .toString() +
+                                  "-" +
+                                  filteredData[i]['Timestamp']
+                                      .split(' ')[0]
+                                      .split('/')[2]
+                                      .toString(),
+                              textAlign: TextAlign.center,
+                            ),
+                            Text(
+                              "Time - " +
+                                  filteredData[i]['Timestamp']
+                                      .split(' ')[1]
+                                      .toString(),
+                              textAlign: TextAlign.center,
+                            )
+                          ],
                         ),
                         Padding(
                             padding:
@@ -446,22 +469,19 @@ class _HomeScreenState extends State<HomeScreen> {
                           style: TextStyle(
                               color: Colors.blue,
                               fontSize: 20,
-                              fontWeight: FontWeight.w900),
+                              fontWeight: FontWeight.w700),
                         ),
                         Padding(
                             padding:
                                 const EdgeInsets.fromLTRB(0.0, 5.0, 0.0, 5.0)),
                         Text(
-                          "Class - " + filteredData[i]['Class'].toString(),
+                          "Class - " +
+                              filteredData[i]['Class'].toString() +
+                              " " +
+                              filteredData[i]['Section'].toString(),
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               fontSize: 18, fontWeight: FontWeight.w500),
-                        ),
-                        Text(
-                          "Section - " + filteredData[i]['Section'].toString(),
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.w300),
                         ),
                         Padding(
                             padding:
@@ -476,11 +496,21 @@ class _HomeScreenState extends State<HomeScreen> {
                         Padding(
                             padding:
                                 const EdgeInsets.fromLTRB(0.0, 5.0, 0.0, 5.0)),
-                        Text(
-                          "Subject - " + filteredData[i]['Subject'].toString(),
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.w600),
+                        ButtonBar(
+                          alignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Text(
+                              "Subject -",
+                              style: TextStyle(
+                                fontSize: 18,
+                              ),
+                            ),
+                            Text(
+                              filteredData[i]['Subject'].toString(),
+                              style: TextStyle(
+                                  fontSize: 18, backgroundColor: Colors.yellow),
+                            ),
+                          ],
                         ),
                         Padding(
                             padding:
@@ -533,101 +563,101 @@ class _HomeScreenState extends State<HomeScreen> {
 
 //Admin Pannel
 
-  Widget coursesList() {
-    if (courses != null) {
-      return ListView.builder(
-          itemCount: courses.documents.length,
-          padding: EdgeInsets.all(5.0),
-          itemBuilder: (context, i) {
-            return Container(
-              child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10.0, 25.0, 10.0, 10.0),
-                  child: Card(
-                    clipBehavior: Clip.antiAliasWithSaveLayer,
-                    elevation: 10.0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                    child: Column(
-                      children: <Widget>[
-                        Padding(
-                            padding:
-                                const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 5.0)),
-                        Text(
-                          courses.documents[i].data['Date'],
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.w300),
-                        ),
-                        Padding(
-                            padding:
-                                const EdgeInsets.fromLTRB(0.0, 5.0, 0.0, 5.0)),
-                        Text(
-                          courses.documents[i].data['Name'],
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              color: Colors.blue,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w300),
-                        ),
-                        Padding(
-                            padding:
-                                const EdgeInsets.fromLTRB(0.0, 5.0, 0.0, 5.0)),
-                        Text(
-                          courses.documents[i].data['Class'],
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.w300),
-                        ),
-                        Padding(
-                            padding:
-                                const EdgeInsets.fromLTRB(0.0, 5.0, 0.0, 5.0)),
-                        Text(
-                          (courses.documents[i].data['Address'] == "")
-                              ? courses.documents[i].data['Address']
-                              : "NONE",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.w300),
-                        ),
-                        Padding(
-                            padding:
-                                const EdgeInsets.fromLTRB(0.0, 5.0, 0.0, 5.0)),
-                        Text(
-                          (courses.documents[i].data['PayOnline'] == "Online")
-                              ? "Payonline - Yes"
-                              : "Payonline - No",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              color: (courses.documents[i].data['PayOnline'] ==
-                                      "Online")
-                                  ? Colors.green
-                                  : Colors.red,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w300),
-                        ),
-                        IconButton(
-                            icon: Icon(Icons.call),
-                            onPressed: () {
-                              openUrl(
-                                  'tel:' + courses.documents[i].data['Mobile'],
-                                  'CallUS');
-                            }),
-                        Padding(
-                            padding:
-                                const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 5.0)),
-                      ],
-                    ),
-                  )),
-            );
-          });
-    } else {
-      return SpinKitThreeBounce(
-        color: Colors.blue,
-        size: 25,
-      );
-    }
-  }
+  // Widget coursesList() {
+  //   if (courses != null) {
+  //     return ListView.builder(
+  //         itemCount: courses.documents.length,
+  //         padding: EdgeInsets.all(5.0),
+  //         itemBuilder: (context, i) {
+  //           return Container(
+  //             child: Padding(
+  //                 padding: const EdgeInsets.fromLTRB(10.0, 25.0, 10.0, 10.0),
+  //                 child: Card(
+  //                   clipBehavior: Clip.antiAliasWithSaveLayer,
+  //                   elevation: 10.0,
+  //                   shape: RoundedRectangleBorder(
+  //                     borderRadius: BorderRadius.circular(10.0),
+  //                   ),
+  //                   child: Column(
+  //                     children: <Widget>[
+  //                       Padding(
+  //                           padding:
+  //                               const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 5.0)),
+  //                       Text(
+  //                         courses.documents[i].data['Date'],
+  //                         textAlign: TextAlign.center,
+  //                         style: TextStyle(
+  //                             fontSize: 18, fontWeight: FontWeight.w300),
+  //                       ),
+  //                       Padding(
+  //                           padding:
+  //                               const EdgeInsets.fromLTRB(0.0, 5.0, 0.0, 5.0)),
+  //                       Text(
+  //                         courses.documents[i].data['Name'],
+  //                         textAlign: TextAlign.center,
+  //                         style: TextStyle(
+  //                             color: Colors.blue,
+  //                             fontSize: 18,
+  //                             fontWeight: FontWeight.w300),
+  //                       ),
+  //                       Padding(
+  //                           padding:
+  //                               const EdgeInsets.fromLTRB(0.0, 5.0, 0.0, 5.0)),
+  //                       Text(
+  //                         courses.documents[i].data['Class'],
+  //                         textAlign: TextAlign.center,
+  //                         style: TextStyle(
+  //                             fontSize: 18, fontWeight: FontWeight.w300),
+  //                       ),
+  //                       Padding(
+  //                           padding:
+  //                               const EdgeInsets.fromLTRB(0.0, 5.0, 0.0, 5.0)),
+  //                       Text(
+  //                         (courses.documents[i].data['Address'] == "")
+  //                             ? courses.documents[i].data['Address']
+  //                             : "NONE",
+  //                         textAlign: TextAlign.center,
+  //                         style: TextStyle(
+  //                             fontSize: 18, fontWeight: FontWeight.w300),
+  //                       ),
+  //                       Padding(
+  //                           padding:
+  //                               const EdgeInsets.fromLTRB(0.0, 5.0, 0.0, 5.0)),
+  //                       Text(
+  //                         (courses.documents[i].data['PayOnline'] == "Online")
+  //                             ? "Payonline - Yes"
+  //                             : "Payonline - No",
+  //                         textAlign: TextAlign.center,
+  //                         style: TextStyle(
+  //                             color: (courses.documents[i].data['PayOnline'] ==
+  //                                     "Online")
+  //                                 ? Colors.green
+  //                                 : Colors.red,
+  //                             fontSize: 18,
+  //                             fontWeight: FontWeight.w300),
+  //                       ),
+  //                       IconButton(
+  //                           icon: Icon(Icons.call),
+  //                           onPressed: () {
+  //                             openUrl(
+  //                                 'tel:' + courses.documents[i].data['Mobile'],
+  //                                 'CallUS');
+  //                           }),
+  //                       Padding(
+  //                           padding:
+  //                               const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 5.0)),
+  //                     ],
+  //                   ),
+  //                 )),
+  //           );
+  //         });
+  //   } else {
+  //     return SpinKitThreeBounce(
+  //       color: Colors.blue,
+  //       size: 25,
+  //     );
+  //   }
+  // }
 //End Admin Pannel
 
 // Filter Form
@@ -645,6 +675,18 @@ class _HomeScreenState extends State<HomeScreen> {
             Text(
               'Filter',
               style: TextStyle(fontSize: 16.0, color: Colors.lightBlue),
+            ),
+            ListTile(
+              title: Text("Select Wing:"),
+              trailing: DropdownButton(
+                  value: this.selectWing,
+                  hint: Text('Choose'),
+                  items: this._dropdownItems_wings,
+                  onChanged: (String value) {
+                    setState(() {
+                      this.selectWing = value;
+                    });
+                  }),
             ),
             ListTile(
               title: Text("Select Class:"),
