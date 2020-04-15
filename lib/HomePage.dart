@@ -4,11 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:url_launcher/url_launcher.dart' as url_launcher;
 import 'package:backdrop/backdrop.dart';
 import 'package:SAK/widgets/contact_us.dart';
 import 'package:SAK/widgets/about_us.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'dart:async';
+import 'package:flutter_open_whatsapp/flutter_open_whatsapp.dart';
 
 Future<Null> openUrl(link, name) async {
   if (await url_launcher.canLaunch(link)) {
@@ -71,6 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
   QuerySnapshot schools;
   //QuerySnapshot courses;
   DataSnapshot homework;
+  List<List<dynamic>> work;
   FetchMethods fetchObj = FetchMethods();
 
   String name;
@@ -84,6 +88,8 @@ class _HomeScreenState extends State<HomeScreen> {
   String selectedSubjects = 'All';
   String selectedLocation;
   String paymentMode;
+  String url =
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vQI6ImXzJnSxuTW5ytoJI7cKaKZeTb2ohAB2I7SpsRBKYLG1A5wtbNOxmYpMaUiMdKXzuI7pbS-byhr/pub?gid=1331100900&single=true&output=csv";
 
   final databaseReference = FirebaseDatabase.instance.reference();
 
@@ -117,6 +123,12 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+
+    fetchObj.getJsonData(url).then((resuts) {
+      print("work Recieved");
+      work = resuts;
+    });
+
     fetchObj.getSchoolData().then((results) {
       setState(() {
         schools = results;
@@ -174,13 +186,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   int _currentIndex = 0;
-
   @override
   Widget build(BuildContext context) {
     return BackdropScaffold(
       title: Text('Sukhlal Adesh Kumar'),
       iconPosition: BackdropIconPosition.leading,
-      headerHeight: 200.0,
       actions: (_currentIndex == 0 || _currentIndex == 3)
           ? <Widget>[
               IconButton(
@@ -195,7 +205,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                   onPressed: () {
                     setState(() {
-                      (_currentIndex == 0) ? schools = null : homework = null;
+                      (_currentIndex == 0) ? schools = null : work = null;
                     });
                     (_currentIndex == 0)
                         ? fetchObj.getSchoolData().then((results) {
@@ -205,7 +215,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             });
                           })
                         : setState(() {
-                            _currentIndex = 5;
+                            _currentIndex = 6;
                           });
                   })
             ]
@@ -218,7 +228,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ? aboutUs()
                   : (_currentIndex == 3)
                       ? homeWork()
-                      : (_currentIndex == 4) ? requestCourse() : filterWork(),
+                      : (_currentIndex == 4)
+                          ? requestCourse()
+                          : (_currentIndex == 5) ? submitWork() : filterWork(),
       backLayer: BackdropNavigationBackLayer(
         items: [
           ListTile(
@@ -278,6 +290,16 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             leading: Icon(
               Icons.file_upload,
+              color: Colors.white,
+            ),
+          ),
+          ListTile(
+            title: Text(
+              "Submit Homework For SDPS",
+              style: TextStyle(color: Colors.white),
+            ),
+            leading: Icon(
+              MdiIcons.send,
               color: Colors.white,
             ),
           ),
@@ -361,48 +383,82 @@ class _HomeScreenState extends State<HomeScreen> {
 //Homework Section
 
   Widget homeWork() {
+    // int len = 0;
+    // List<Map<String, String>> filteredData = [];
+    // if (homework != null) {
+    //   for (var value in homework.value['homework']) {
+    //     if (selectedSubjects != "All" && value['Subject'] != selectedSubjects) {
+    //       continue;
+    //     } else if (selectedClass_for_homework != "All" &&
+    //         value['Class'] != selectedClass_for_homework) {
+    //       continue;
+    //     } else if (selectSection != "All" &&
+    //         value['Section'] != selectSection) {
+    //       continue;
+    //     } else if (selectWing != "All" && value['Wing'] != selectWing) {
+    //       continue;
+    //     } else {
+    //       len = len + 1;
+    //       Map<String, String> temp = {
+    //         'Class': value['Class'],
+    //         'Subject': value['Subject'],
+    //         'Section': value['Section'],
+    //         'Name': value['Name'],
+    //         'FatherName': value['FatherName'],
+    //         'UploadYourHomework': value['UploadYourHomework'],
+    //         'Timestamp': value['Timestamp'],
+    //         'Wing': value['Wing']
+    //       };
+    //       filteredData.add(temp);
+    //     }
+    //   }
+    //   showDes(len.toString() + " Entries Found");
+    // }
     int len = 0;
     List<Map<String, String>> filteredData = [];
-    if (homework != null) {
-      for (var value in homework.value['homework']) {
-        if (selectedSubjects != "All" && value['Subject'] != selectedSubjects) {
+    if (work != null && work.length > 1) {
+      for (var value in work) {
+        if (value[0].toString() == "Timestamp") continue;
+        if (selectedSubjects != "All" &&
+            value[5].toString() != selectedSubjects) {
           continue;
         } else if (selectedClass_for_homework != "All" &&
-            value['Class'] != selectedClass_for_homework) {
+            value[3].toString() != selectedClass_for_homework) {
           continue;
         } else if (selectSection != "All" &&
-            value['Section'] != selectSection) {
+            value[4].toString() != selectSection) {
           continue;
-        } else if (selectWing != "All" && value['Wing'] != selectWing) {
+        } else if (selectWing != "All" && value[7].toString() != selectWing) {
           continue;
         } else {
           len = len + 1;
           Map<String, String> temp = {
-            'Class': value['Class'],
-            'Subject': value['Subject'],
-            'Section': value['Section'],
-            'Name': value['Name'],
-            'FatherName': value['FatherName'],
-            'UploadYourHomework': value['UploadYourHomework'],
-            'Timestamp': value['Timestamp'],
-            'Wing': value['Wing']
+            'Class': value[3].toString(),
+            'Subject': value[5].toString(),
+            'Section': value[4].toString(),
+            'Name': value[1].toString(),
+            'FatherName': value[2].toString(),
+            'UploadYourHomework': value[6].toString(),
+            'Timestamp': value[0].toString(),
+            'Wing': value[7].toString(),
+            'Whatsapp': value[8].toString()
           };
           filteredData.add(temp);
         }
       }
       showDes(len.toString() + " Entries Found");
     }
-
-    if (homework != null && len == 0) {
+    if (work != null && work.length > 1 && len == 0) {
       return Center(
         child: Text("No Entries Found"),
       );
-    } else if (homework == null) {
+    } else if (work == null || work.length <= 1) {
       return SpinKitThreeBounce(
         color: Colors.blue,
         size: 25,
       );
     } else {
+      filteredData = filteredData.reversed.toList();
       return ListView.builder(
           itemCount: len,
           padding: EdgeInsets.all(5.0),
@@ -511,6 +567,42 @@ class _HomeScreenState extends State<HomeScreen> {
                                   fontSize: 18, backgroundColor: Colors.yellow),
                             ),
                           ],
+                        ),
+                        Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 5.0)),
+                        IconButton(
+                          icon: Icon(
+                            MdiIcons.whatsapp,
+                            color: Colors.green,
+                            size: 40,
+                          ),
+                          onPressed: () {
+                            if (filteredData[i]['Whatsapp'].toString() == "0") {
+                              showDes("No whatsapp number found for " +
+                                  filteredData[i]['Name'].toString());
+                            } else {
+                              FlutterOpenWhatsapp.sendSingleMessage(
+                                  "91" + filteredData[i]['Whatsapp'].toString(),
+                                  "Hello " +
+                                      filteredData[i]['Name'] +
+                                      ", Regarding homework Sumitted on - " +
+                                      filteredData[i]['Timestamp']
+                                          .split(' ')[0]
+                                          .split('/')[1]
+                                          .toString() +
+                                      "-" +
+                                      filteredData[i]['Timestamp']
+                                          .split(' ')[0]
+                                          .split('/')[0]
+                                          .toString() +
+                                      "-" +
+                                      filteredData[i]['Timestamp']
+                                          .split(' ')[0]
+                                          .split('/')[2]
+                                          .toString());
+                            }
+                          },
                         ),
                         Padding(
                             padding:
@@ -728,13 +820,13 @@ class _HomeScreenState extends State<HomeScreen> {
               child: RaisedButton(
                 onPressed: () {
                   setState(() {
-                    homework = null;
+                    work = null;
                     _currentIndex = 3;
                   });
-                  fetchObj.getHomeworkData(databaseReference).then((results) {
+                  fetchObj.getJsonData(url).then((results) {
                     setState(() {
-                      homework = results;
-                      print('DoneHomeWorkFilter');
+                      work = results;
+                      print('Work Recieved With Filter');
                     });
                   });
                 },
@@ -908,3 +1000,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 //End Form
 }
+
+//Submit Homework
+
+Widget submitWork() {
+  return Scaffold(
+    body: Center(
+      child: Text("This Section will be added soon........"),
+    ),
+  );
+}
+
+//End Submit work

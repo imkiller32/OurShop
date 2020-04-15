@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart' as url_launcher;
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_open_whatsapp/flutter_open_whatsapp.dart';
 
 Future<Null> openUrl(link, name) async {
   if (await url_launcher.canLaunch(link)) {
@@ -52,7 +54,7 @@ Widget contactUs() {
                 width: double.infinity,
                 child: Row(
                   children: <Widget>[
-                    Icon(Icons.phone, color: Colors.blue),
+                    Icon(MdiIcons.phone, color: Colors.blue),
                     Text(
                       '   Call',
                       textAlign: TextAlign.left,
@@ -63,6 +65,27 @@ Widget contactUs() {
               ),
               onPressed: () {
                 openUrl('tel:9319731498', 'CallUS');
+              },
+            ),
+            Divider(
+              height: 3.0,
+            ),
+            FlatButton(
+              child: SizedBox(
+                width: double.infinity,
+                child: Row(
+                  children: <Widget>[
+                    Icon(MdiIcons.whatsapp, color: Colors.green),
+                    Text(
+                      '   Whatsapp',
+                      textAlign: TextAlign.left,
+                      style: TextStyle(color: Colors.black),
+                    ),
+                  ],
+                ),
+              ),
+              onPressed: () {
+                FlutterOpenWhatsapp.sendSingleMessage("919319731498", "Regarding Course");
               },
             ),
             Divider(
