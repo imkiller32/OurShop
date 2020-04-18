@@ -12,6 +12,7 @@ import 'package:SAK/widgets/about_us.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'dart:async';
 import 'package:flutter_open_whatsapp/flutter_open_whatsapp.dart';
+import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 
 Future<Null> openUrl(link, name) async {
   if (await url_launcher.canLaunch(link)) {
@@ -91,11 +92,15 @@ class _HomeScreenState extends State<HomeScreen> {
   String url =
       "https://docs.google.com/spreadsheets/d/e/2PACX-1vQI6ImXzJnSxuTW5ytoJI7cKaKZeTb2ohAB2I7SpsRBKYLG1A5wtbNOxmYpMaUiMdKXzuI7pbS-byhr/pub?gid=1331100900&single=true&output=csv";
 
+  String selectDate = 'All';
+  String _datePicker = 'All';
   final databaseReference = FirebaseDatabase.instance.reference();
 
   static const locationList = <String>['Mawana', 'Other'];
 
   static const paymentList = <String>['Online', 'Other'];
+
+  static const dateList = <String>['All', 'Today', 'Choose Specific'];
 
   var listOfSubject = <String>[];
   var listOfSection = <String>[];
@@ -110,6 +115,13 @@ class _HomeScreenState extends State<HomeScreen> {
       .toList();
 
   final List<DropdownMenuItem<String>> _dropdownItems_payment = paymentList
+      .map((String value) => DropdownMenuItem<String>(
+            value: value,
+            child: Text(value),
+          ))
+      .toList();
+
+  final List<DropdownMenuItem<String>> _dropdownItems_date = dateList
       .map((String value) => DropdownMenuItem<String>(
             value: value,
             child: Text(value),
@@ -383,37 +395,6 @@ class _HomeScreenState extends State<HomeScreen> {
 //Homework Section
 
   Widget homeWork() {
-    // int len = 0;
-    // List<Map<String, String>> filteredData = [];
-    // if (homework != null) {
-    //   for (var value in homework.value['homework']) {
-    //     if (selectedSubjects != "All" && value['Subject'] != selectedSubjects) {
-    //       continue;
-    //     } else if (selectedClass_for_homework != "All" &&
-    //         value['Class'] != selectedClass_for_homework) {
-    //       continue;
-    //     } else if (selectSection != "All" &&
-    //         value['Section'] != selectSection) {
-    //       continue;
-    //     } else if (selectWing != "All" && value['Wing'] != selectWing) {
-    //       continue;
-    //     } else {
-    //       len = len + 1;
-    //       Map<String, String> temp = {
-    //         'Class': value['Class'],
-    //         'Subject': value['Subject'],
-    //         'Section': value['Section'],
-    //         'Name': value['Name'],
-    //         'FatherName': value['FatherName'],
-    //         'UploadYourHomework': value['UploadYourHomework'],
-    //         'Timestamp': value['Timestamp'],
-    //         'Wing': value['Wing']
-    //       };
-    //       filteredData.add(temp);
-    //     }
-    //   }
-    //   showDes(len.toString() + " Entries Found");
-    // }
     int len = 0;
     List<Map<String, String>> filteredData = [];
     if (work != null && work.length > 1) {
@@ -429,6 +410,18 @@ class _HomeScreenState extends State<HomeScreen> {
             value[4].toString() != selectSection) {
           continue;
         } else if (selectWing != "All" && value[7].toString() != selectWing) {
+          continue;
+        } else if (_datePicker != 'All' &&
+            _datePicker !=
+                (value[0].toString().split(' ')[0].split('/')[1].toString() +
+                    '-' +
+                    value[0].toString().split(' ')[0].split('/')[0].toString() +
+                    '-' +
+                    value[0]
+                        .toString()
+                        .split(' ')[0]
+                        .split('/')[2]
+                        .toString())) {
           continue;
         } else {
           len = len + 1;
@@ -571,42 +564,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         Padding(
                             padding:
                                 const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 5.0)),
-                        IconButton(
-                          icon: Icon(
-                            MdiIcons.whatsapp,
-                            color: Colors.green,
-                            size: 40,
-                          ),
-                          onPressed: () {
-                            if (filteredData[i]['Whatsapp'].toString() == "0") {
-                              showDes("No whatsapp number found for " +
-                                  filteredData[i]['Name'].toString());
-                            } else {
-                              FlutterOpenWhatsapp.sendSingleMessage(
-                                  "91" + filteredData[i]['Whatsapp'].toString(),
-                                  "Hello " +
-                                      filteredData[i]['Name'] +
-                                      ", Regarding homework Sumitted on - " +
-                                      filteredData[i]['Timestamp']
-                                          .split(' ')[0]
-                                          .split('/')[1]
-                                          .toString() +
-                                      "-" +
-                                      filteredData[i]['Timestamp']
-                                          .split(' ')[0]
-                                          .split('/')[0]
-                                          .toString() +
-                                      "-" +
-                                      filteredData[i]['Timestamp']
-                                          .split(' ')[0]
-                                          .split('/')[2]
-                                          .toString());
-                            }
-                          },
-                        ),
-                        Padding(
-                            padding:
-                                const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 5.0)),
                         Container(
                           width: 150,
                           padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
@@ -640,6 +597,53 @@ class _HomeScreenState extends State<HomeScreen> {
                             },
                           ),
                         ),
+                        Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 5.0)),
+                        Divider(
+                          height: 20,
+                        ),
+                        FlatButton(
+                            onPressed: () {
+                              if (filteredData[i]['Whatsapp'].toString() ==
+                                  "0") {
+                                showDes("No whatsapp number found for " +
+                                    filteredData[i]['Name'].toString());
+                              } else {
+                                FlutterOpenWhatsapp.sendSingleMessage(
+                                    "91" +
+                                        filteredData[i]['Whatsapp'].toString(),
+                                    "Hello " +
+                                        filteredData[i]['Name'] +
+                                        ", Regarding homework Sumitted on - " +
+                                        filteredData[i]['Timestamp']
+                                            .split(' ')[0]
+                                            .split('/')[1]
+                                            .toString() +
+                                        "-" +
+                                        filteredData[i]['Timestamp']
+                                            .split(' ')[0]
+                                            .split('/')[0]
+                                            .toString() +
+                                        "-" +
+                                        filteredData[i]['Timestamp']
+                                            .split(' ')[0]
+                                            .split('/')[2]
+                                            .toString());
+                              }
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                Text(
+                                  'Contact Student : ',
+                                ),
+                                Icon(
+                                  MdiIcons.whatsapp,
+                                  color: Colors.green,
+                                ),
+                              ],
+                            )),
                         Padding(
                             padding:
                                 const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 5.0)),
@@ -768,54 +772,179 @@ class _HomeScreenState extends State<HomeScreen> {
               'Filter',
               style: TextStyle(fontSize: 16.0, color: Colors.lightBlue),
             ),
-            ListTile(
-              title: Text("Select Wing:"),
-              trailing: DropdownButton(
-                  value: this.selectWing,
-                  hint: Text('Choose'),
-                  items: this._dropdownItems_wings,
-                  onChanged: (String value) {
-                    setState(() {
-                      this.selectWing = value;
-                    });
-                  }),
+            Container(
+              padding: const EdgeInsets.fromLTRB(10, 30, 0, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    'Select Wing - ',
+                    style: TextStyle(
+                        fontSize: 16.0,
+                        fontFamily: 'Open Sans',
+                        fontWeight: FontWeight.w500),
+                  ),
+                  DropdownButton(
+                      value: this.selectWing,
+                      hint: Text('Choose'),
+                      items: this._dropdownItems_wings,
+                      onChanged: (String value) {
+                        setState(() {
+                          this.selectWing = value;
+                        });
+                      }),
+                ],
+              ),
             ),
-            ListTile(
-              title: Text("Select Class:"),
-              trailing: DropdownButton(
-                  value: this.selectedClass_for_homework,
-                  hint: Text('Choose'),
-                  items: this._dropdownItems_class,
-                  onChanged: (String value) {
-                    setState(() {
-                      this.selectedClass_for_homework = value;
-                    });
-                  }),
+            Divider(
+              height: 20.0,
             ),
-            ListTile(
-              title: Text("Select Section:"),
-              trailing: DropdownButton(
-                  value: this.selectSection,
-                  hint: Text('Choose'),
-                  items: this._dropdownItems_sections,
-                  onChanged: (String value) {
-                    setState(() {
-                      this.selectSection = value;
-                    });
-                  }),
+            Container(
+              padding: const EdgeInsets.fromLTRB(10, 0, 0, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    'Select Class - ',
+                    style: TextStyle(
+                        fontSize: 16.0,
+                        fontFamily: 'Open Sans',
+                        fontWeight: FontWeight.w500),
+                  ),
+                  DropdownButton(
+                      value: this.selectedClass_for_homework,
+                      hint: Text('Choose'),
+                      items: this._dropdownItems_class,
+                      onChanged: (String value) {
+                        setState(() {
+                          this.selectedClass_for_homework = value;
+                        });
+                      }),
+                ],
+              ),
             ),
-            ListTile(
-              title: Text("Select Subject:"),
-              trailing: DropdownButton(
-                  value: this.selectedSubjects,
-                  hint: Text('Choose'),
-                  items: this._dropdownItems_subjects,
-                  onChanged: (String value) {
-                    setState(() {
-                      this.selectedSubjects = value;
-                    });
-                  }),
+            Divider(
+              height: 20.0,
             ),
+            Container(
+              padding: const EdgeInsets.fromLTRB(10, 0, 0, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    'Select Section - ',
+                    style: TextStyle(
+                        fontSize: 16.0,
+                        fontFamily: 'Open Sans',
+                        fontWeight: FontWeight.w500),
+                  ),
+                  DropdownButton(
+                      value: this.selectSection,
+                      hint: Text('Choose'),
+                      items: this._dropdownItems_sections,
+                      onChanged: (String value) {
+                        setState(() {
+                          this.selectSection = value;
+                        });
+                      }),
+                ],
+              ),
+            ),
+            Divider(
+              height: 20.0,
+            ),
+            Container(
+              padding: const EdgeInsets.fromLTRB(10, 0, 0, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    'Select Subject - ',
+                    style: TextStyle(
+                        fontSize: 16.0,
+                        fontFamily: 'Open Sans',
+                        fontWeight: FontWeight.w500),
+                  ),
+                  DropdownButton(
+                      value: this.selectedSubjects,
+                      hint: Text('Choose'),
+                      items: this._dropdownItems_subjects,
+                      onChanged: (String value) {
+                        setState(() {
+                          this.selectedSubjects = value;
+                        });
+                      }),
+                ],
+              ),
+            ),
+            Divider(
+              height: 20.0,
+            ),
+            Container(
+              padding: const EdgeInsets.fromLTRB(10, 0, 0, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    'Select Date - ',
+                    style: TextStyle(
+                        fontSize: 16.0,
+                        fontFamily: 'Open Sans',
+                        fontWeight: FontWeight.w500),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      DropdownButton(
+                          value: this.selectDate,
+                          hint: Text('Choose'),
+                          items: this._dropdownItems_date,
+                          onChanged: (String value) {
+                            if (value == 'Choose Specific') {
+                              DatePicker.showDatePicker(context,
+                                  theme: DatePickerTheme(
+                                    containerHeight: 210.0,
+                                  ),
+                                  showTitleActions: true,
+                                  minTime: DateTime(2000, 1, 1),
+                                  maxTime: DateTime(2022, 12, 31),
+                                  onConfirm: (date) {
+                                setState(() {
+                                  _datePicker = date.day.toString() +
+                                      '-' +
+                                      date.month.toString() +
+                                      '-' +
+                                      date.year.toString();
+                                });
+                              },
+                                  currentTime: DateTime.now(),
+                                  locale: LocaleType.en);
+                            } else if (value == 'Today') {
+                              setState(() {
+                                _datePicker = DateTime.now().day.toString() +
+                                    '-' +
+                                    DateTime.now().month.toString() +
+                                    '-' +
+                                    DateTime.now().year.toString();
+                              });
+                            } else {
+                              setState(() {
+                                _datePicker = 'All';
+                              });
+                            }
+                            setState(() {
+                              this.selectDate = value;
+                            });
+                          }),
+                      Text(_datePicker,
+                          style: TextStyle(
+                              fontSize: 16.0, color: Colors.lightBlue)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Padding(padding: const EdgeInsets.fromLTRB(0, 20, 0, 0)),
             Center(
               child: RaisedButton(
                 onPressed: () {

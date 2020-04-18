@@ -24,7 +24,7 @@ class FetchMethods {
   getJsonData(String url) async {
     var response = await http
         .get(Uri.encodeFull(url), headers: {"Accept": "application/csv"});
-    print('hell' + response.toString());
+    print('Response For csv file -> ' + response.toString());
     List<List<dynamic>> data =
         const CsvToListConverter().convert(response.body);
     return data;
